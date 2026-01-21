@@ -1,6 +1,6 @@
 # vocal
 
-This is an R package designed to support checking whether data complies with a standard vocabulary. It can check for 
+This is an *R* package for checking data compliance with a standard vocabulary. It can check for 
 
 - (un)known variable names
 - missing (required) variables
