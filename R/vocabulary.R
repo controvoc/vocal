@@ -171,7 +171,7 @@ check_installed <- function(voc) {
 			out[i] <- TRUE
 			next
 		}
-		pvoc <- vocal:::vocabulary_path(voc[i])
+		pvoc <- vocabulary_path(voc[i])
 		f <- file.path(pvoc, "sha.txt")
 		if (!file.exists(f)) {
 			message(paste("installing", voc[i])); utils::flush.console()

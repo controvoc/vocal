@@ -22,7 +22,7 @@ check_date <- function(x, name, trms=NULL) {
 		answ[nrow(answ)+1, ] <- c("invalid date format", name)
 	}
 	today <- as.Date(Sys.time())
-	ymd <- na.omit(x[n==10])
+	ymd <- stats::na.omit(x[n==10])
 #	if (any(is.na(ymd))) {
 #		return(FALSE)
 #	}
@@ -30,7 +30,7 @@ check_date <- function(x, name, trms=NULL) {
 		d <- as.Date(ymd)
 		if (any(is.na(d))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("invalid date(s) in: ", name))
-			d <- na.omit(d)
+			d <- stats::na.omit(d)
 		}
 		if (any(ymd < as.Date("1950-01-01"), na.rm=TRUE)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1950 in: ", name))
@@ -38,7 +38,7 @@ check_date <- function(x, name, trms=NULL) {
 		if (any(ymd > today, na.rm=TRUE)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("future date(s) in: ", name))
 		}
-		m <- na.omit(substr(ymd, 6, 7))
+		m <- stats::na.omit(substr(ymd, 6, 7))
 		if (length(m) > 0) {
 			m <- as.numeric(m)
 			if (any((m < 1) | (m > 12))) {
@@ -48,13 +48,13 @@ check_date <- function(x, name, trms=NULL) {
 	}
 	thisyear <- as.numeric(format(today, "%Y"))
 	today <- as.character(today)
-	ym <- na.omit(x[n==7])
+	ym <- stats::na.omit(x[n==7])
 	if (length(ym) > 0) {
 		d <- substr(ym, 5, 5)
 		if (any(d != "-")) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("bad date(s) in: ", name))
 		}
-		y <- na.omit(as.numeric(substr(ym, 1, 4)))
+		y <- stats::na.omit(as.numeric(substr(ym, 1, 4)))
 		if (any(y < 1960)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1960 in: ", name))
 		} 
@@ -62,13 +62,13 @@ check_date <- function(x, name, trms=NULL) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) after ", thisyear, " in: ", name))
 		}
 
-		m <- na.omit(as.numeric(substr(ym, 6, 7)))
+		m <- stats::na.omit(as.numeric(substr(ym, 6, 7)))
 		if (any((m < 1) | (m > 12))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("months not between 1 and 12): ", name))
 		} 
 	}
 
-	y <-  na.omit(x[n==4])
+	y <-  stats::na.omit(x[n==4])
 	if (length(y) > 0) {
 		y <- as.numeric(y)
 		if (any(y < 1960)) {
