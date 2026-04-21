@@ -35,12 +35,18 @@ valid_vocabulary <- function() {
 
 set_vocabulary <- function(name, update=TRUE, force=FALSE, quiet=FALSE) {
 	oldname <- .vocal_environment$name
-	if (!isTRUE(identical(name, oldname))) {
+	if (force || (!isTRUE(identical(name, oldname)))) {
 		.vocal_environment$name <- name
 		.vocal_environment$checked <- FALSE
 		.vocal_environment$read <- FALSE
-		check_installed(name)
+		check_installed(name, update)
 		d <- try(read_vocabulary())
+		if (!inherits(d, "try-error")) {
+			.vocal_environment$voc <- d
+			.vocal_environment$read <- TRUE
+		}
+	} else if (!(isTRUE(.vocal_environment$read))) {
+		d <- try(read_vocabulary())	
 		if (!inherits(d, "try-error")) {
 			.vocal_environment$voc <- d
 			.vocal_environment$read <- TRUE
@@ -163,7 +169,7 @@ github_sha <- function(voc) {
 }
 
 
-check_installed <- function(voc) {
+check_installed <- function(voc, update) {
 	if (length(voc) < 1) return(NA)
 	out <- rep(NA, length(voc))
 	for (i in 1:length(voc)) {
@@ -184,6 +190,8 @@ check_installed <- function(voc) {
 				.vocal_environment$checked <- TRUE
 				out[i] <- TRUE
 			}
+		} else if (isTRUE(update)) {
+			check_one_vocabulary(voc[i], update=TRUE, force=FALSE, quiet=FALSE, delay=24)
 		} else {
 			out[i] <- TRUE		
 		}
