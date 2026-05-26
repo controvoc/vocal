@@ -39,7 +39,7 @@ set_vocabulary <- function(name, update=TRUE, force=FALSE, quiet=FALSE) {
 		.vocal_environment$name <- name
 		.vocal_environment$checked <- FALSE
 		.vocal_environment$read <- FALSE
-		check_installed(name, update)
+		check_installed(name, update, quiet=quiet)
 		d <- try(read_vocabulary())
 		if (!inherits(d, "try-error")) {
 			.vocal_environment$voc <- d
@@ -169,7 +169,7 @@ github_sha <- function(voc) {
 }
 
 
-check_installed <- function(voc, update) {
+check_installed <- function(voc, update, quiet=FALSE) {
 	if (length(voc) < 1) return(NA)
 	out <- rep(NA, length(voc))
 	for (i in 1:length(voc)) {
@@ -180,7 +180,7 @@ check_installed <- function(voc, update) {
 		pvoc <- vocabulary_path(voc[i])
 		f <- file.path(pvoc, "sha.txt")
 		if (!file.exists(f)) {
-			message(paste("installing", voc[i])); utils::flush.console()
+			if (!quiet) message(paste("installing", voc[i])); utils::flush.console()
 			p <- vocabulary_path("github:")
 			v <- gsub("^github:", "", voc[i])
 			gsha <- github_sha(v)
@@ -191,7 +191,7 @@ check_installed <- function(voc, update) {
 				out[i] <- TRUE
 			}
 		} else if (isTRUE(update)) {
-			check_one_vocabulary(voc[i], update=TRUE, force=FALSE, quiet=FALSE, delay=24)
+			check_one_vocabulary(voc[i], update=TRUE, force=FALSE, quiet=quiet, delay=24)
 		} else {
 			out[i] <- TRUE		
 		}
@@ -236,8 +236,11 @@ check_one_vocabulary <- function(gvoc, update, force, quiet, delay=0) {
 			if (!quiet) message("the vocabulary is not up-to-date")
 			return(FALSE)	
 		}
-		if (!quiet) message("checking for updated vocabulary")
-		if (!quiet) message(paste("updating", voc, "to version", gsha)); utils::flush.console()
+		if (!quiet) {
+			message("checking for updated vocabulary")
+			message(paste("updating", voc, "to version", gsha)); 
+			utils::flush.console()
+		}
 		updated <- try(clone_github(voc, vocabulary_path("github:")))
 		if (isTRUE(updated)) {
 			writeLines(gsha, file.path(pth, "sha.txt"))	
