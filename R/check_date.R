@@ -27,21 +27,27 @@ check_date <- function(x, name, trms=NULL) {
 #		return(FALSE)
 #	}
 	if (length(ymd) > 0) {
+		i <- grepl("/", ymd)
+		if (any(i)) {
+			answ[nrow(answ)+1, ] <- c("date", paste0("found '/' signs in date(s) in: ", name))
+			ymd <- ymd[!i]
+		}
+
 		d <- as.Date(ymd)
 		if (any(is.na(d))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("invalid date(s) in: ", name))
 			d <- stats::na.omit(d)
 		}
-		if (any(ymd < as.Date("1950-01-01"), na.rm=TRUE)) {
+		if (isTRUE(any(ymd < as.Date("1950-01-01"), na.rm=TRUE))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1950 in: ", name))
 		}
-		if (any(ymd > today, na.rm=TRUE)) {
+		if (isTRUE(any(ymd > today, na.rm=TRUE))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("future date(s) in: ", name))
 		}
 		m <- stats::na.omit(substr(ymd, 6, 7))
 		if (length(m) > 0) {
 			m <- as.numeric(m)
-			if (any((m < 1) | (m > 12))) {
+			if (isTRUE(any((m < 1) | (m > 12)))) {
 				answ[nrow(answ)+1, ] <- c("date", paste0("months not between 1 and 12): ", name))
 			} 
 		}
