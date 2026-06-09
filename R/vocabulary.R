@@ -63,25 +63,38 @@ get_vocabulary <- function() {
 }
 
 
-has_names <- function(v, req) {
-	test <- sapply(v, \(i) req %in% names(i))
-	if (!(all(test))) {
-		stop("incomplete variables files")
+has_names <- function(v, req, kind = "files") {
+	missing_by <- list()
+	for (i in seq_along(v)) {
+		missing <- setdiff(req, names(v[[i]]))
+		if (length(missing) > 0L) {
+			nm <- if (!is.null(names(v)) && nzchar(names(v)[i])) names(v)[i] else as.character(i)
+			missing_by[[nm]] <- missing
+		}
 	}
+	if (length(missing_by) == 0L) return(invisible(TRUE))
+	lines <- vapply(names(missing_by),
+		function(nm) sprintf("  - '%s': missing %s",
+			nm, paste(missing_by[[nm]], collapse = ", ")),
+		character(1))
+	stop("incomplete ", kind, " (required columns absent):\n",
+		paste(lines, collapse = "\n"), call. = FALSE)
 }
 
 read_one_voc <- function(voc) {
-		
+
 	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
 
 	ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
 	gg <- gsub("^variables_|\\.csv$", "", basename(ff))
-	v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
+	v <- lapply(seq_along(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
+	names(v) <- basename(ff)
 	if (length(ff) > 0) {
-		reqs <- c("name", "type", "vocabulary", "valid_min", "valid_max")
-		has_names(v, reqs)
+		reqs <- c("name", "type") #, "vocabulary", "valid_min", "valid_max")
+		has_names(v, reqs, kind = "variables files")
 		# "NAok", "multiple_allowed", "required", 
 	}
+	names(v) <- NULL
 	v <- do.call(dplyr::bind_rows, v)
 
 	ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
@@ -89,7 +102,13 @@ read_one_voc <- function(voc) {
 	names(values) <- gsub("^values_|\\.csv$", "", basename(ff))
 	if (length(ff) > 0) {
 		reqs <- c("name")
-		has_names(values, reqs)
+		has_names(values, reqs, kind = "values files")
+	}
+	if ((NROW(v) == 0L) && (length(values) == 0L)) {
+		stop("vocabulary at '", p,
+			"' has no variables_*.csv or values_*.csv files; ",
+			"expected sub-folders 'variables/' and/or 'values/'.",
+			call. = FALSE)
 	}
 	list(variables=v, values=values)
 }
