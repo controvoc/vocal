@@ -7,6 +7,7 @@ check_missingvalues <- function(x, trms) {
 	a <- apply(x, 2, all)
 	if (any(a)) {
 		answ[nrow(answ)+1, ] <- c("all NA", paste(nms[a], collapse=", "))
+		nms <- nms[!a]
 		x <- x[, !a, drop=FALSE]
 		if (ncol(x) == 0) {
 			return(answ)
