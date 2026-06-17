@@ -2,11 +2,11 @@ Package: vocal
 Type: Package
 Title: Controlled vocabulary compliance checking
 Description: Tools to check if data is compliant with a controlled vocabulary. The package was developed for the Carob project <https://carob-data.org>.
-Version: 0.3-9
+Version: 0.3-10
 Imports: geodata, terra, httr, jsonlite, rappdirs
 Suggests: dplyr
 Depends: R (>= 4.1.0)
-Date: 2026-06-16
+Date: 2026-06-17
 Encoding: UTF-8
 Authors@R: c(
 	person("Robert J.", "Hijmans", role = c("cre", "aut"),  email = "r.hijmans@gmail.com")
