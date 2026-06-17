@@ -85,6 +85,13 @@ check_type_range <- function(x, trms, answ) {
 	if (ncol(x) == 0) return(answ)
 	nms <- colnames(x)
 	trs <- trms[match(nms, trms$name), ]
+	skip <- vapply(x, function(v) all(is.na(v)), logical(1))
+	if (all(skip)) return(answ)
+	if (any(skip)) {
+		x <- x[, !skip, drop=FALSE]
+		nms <- colnames(x)
+		trs <- trs[!skip, , drop=FALSE]
+	}
 	cls <- vapply(x, function(v) {
 		cl <- class(v)
 		if (length(cl) > 1 && any(cl %in% c("POSIXct", "POSIXt", "Date"))) {
