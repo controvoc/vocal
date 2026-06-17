@@ -81,24 +81,28 @@ check_ranges <- function(x, trms, answ) {
 check_type_range <- function(x, trms, answ) {
 	nms <- colnames(x)
 	i <- match(nms, trms$name)
-	x <- x[, !is.na(i)]
+	x <- x[, !is.na(i), drop=FALSE]
+	if (ncol(x) == 0) return(answ)
 	nms <- colnames(x)
 	trs <- trms[match(nms, trms$name), ]
-	cls <- sapply(x, class)
-	if (is.list(cls)) {
-		i <- sapply(cls, length)
-		i <- names(i[i>1])
-		stop(paste("    bad datatype:", paste(i, collapse=", ")))
-	}
+	cls <- vapply(x, function(v) {
+		cl <- class(v)
+		if (length(cl) > 1 && any(cl %in% c("POSIXct", "POSIXt", "Date"))) {
+			"date"
+		} else {
+			cl[[1]]
+		}
+	}, character(1))
 	cls <- cbind(cls, trs$type, nms)
-	cls <- cls[cls[,2] != "", ]
+	cls <- cls[cls[,2] != "", , drop=FALSE]
+	if (NROW(cls) == 0) return(check_ranges(x, trs, answ))
 	i <- (cls[,1] == "character") & (cls[,2] == "date")
 	cls[i, 2] <- "character"
 	i <- (cls[,1] == "integer") & (cls[,2] == "numeric")
 	cls[i, 1] <- "numeric"
 	i <- cls[,1] != cls[,2]
 	if (isTRUE(any(i))) {
-		bad <- paste(cls[i,3], collapse=", ")
+		bad <- paste(paste0(cls[i, 3], " (", cls[i, 1], ", not ", cls[i, 2], ")"), collapse=", ")
 		answ[nrow(answ)+1, ] <- c("bad datatype", bad)
 		trs <- trs[!i, ]
 	} 
