@@ -1,15 +1,17 @@
 
 
-accepted_variables <- function(include=NULL) {
+accepted_variables <- function(include=NULL, exclude=NULL) {
 	if (!isTRUE(.vocal_environment$read)) {
 		stop("no vocabulary data")
 	}
 	v <- .vocal_environment$voc$variables
-	if (is.null(include)) {
-		v
-	} else {
-		v[v$group %in% include, ]
+	if (!is.null(include)) {
+		v <- v[v$group %in% include, ]
 	}
+	if (!is.null(exclude)) {
+		v <- v[!(v$group %in% exclude), ]
+	}
+	v
 }
 
 accepted_values <- function(name) {
