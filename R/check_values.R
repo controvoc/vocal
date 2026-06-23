@@ -126,13 +126,13 @@ check_accepted <- function(x, trms, answ) {
 		accepted <- accepted_values(trms$vocabulary[i])[,1]
 		provided <- unique(x[, trms$name[i]])
 		if (!is.null(trms$required)) {
-			if (trms$required[i] != "yes") {
+			if (!isTRUE(trms$required[i] == "no")) {
 				provided <- stats::na.omit(provided)
 			} 
 		}
 		if (length(provided) > 0) {
 			if (!is.null(trms$multiple_allowed)) {
-				if (trms$multiple_allowed[i] == "yes") {
+				if (!isTRUE(trms$multiple_allowed[i] == "no")) {
 					if (!is.na(provided[1])) {
 						provided <- unique(unlist(strsplit(as.character(provided), ";|; ")))
 					}
@@ -143,7 +143,7 @@ check_accepted <- function(x, trms, answ) {
 					provided <- unique(unlist(strsplit(as.character(provided), "_")))
 				}
 			}
-			if (trms$NAok[i]=="yes") {
+			if (isTRUE(trms$NAok[i]=="yes")) {
 				provided <- stats::na.omit(provided)
 			}
 			if (length(provided) > 0) {

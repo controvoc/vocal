@@ -18,7 +18,7 @@ Functions for compliance checking. You can check whether variable names are acce
 
 
 \usage{
-check_variables(x, trms, required=TRUE)
+check_variables(x, trms, required=TRUE, suggest=TRUE)
 check_values(x, trms)
 check_lonlat(x)
 check_caps(x, vars, minchar=5, frac=0)
@@ -31,6 +31,8 @@ check_datespan(x, startdate, enddate, smin=0, smax=366)
   \item{x}{data.frame to check}
   \item{trms}{data.frame with the vocabulary. E.g. \code{accepted_values("github:controvoc/terminag")}}
   \item{required}{logical. If \code{TRUE} the presence of required variables is checked}
+  \item{suggest}{logical. If \code{TRUE}, unknown variable names are reported with a
+    close match from the vocabulary (Levenshtein distance, as in \code{carobiner::draft})}
   \item{name}{character. The variable name. For example, "planting_date"}
   \item{vars}{character. The variables to check}
   \item{minchar}{positive integer}
@@ -49,14 +51,17 @@ data.frame
 
 
 \examples{
+
 set_vocabulary("github:controvoc/terminag")
-trms <- vocal::accepted_variables(c("all", "location", "crop", "soil", "weather"))
+trms <- vocal::accepted_variables(exclude=c("metadata", "carob-metadata"))
 
 x <- data.frame(
 	dataset_id = 1,
 	country="Côte d'Ivoire",
 	location = "Taï",
-	adm1 = "Montagnes",
+	admin1 = "Montagnes",
+	longitude=10,
+	lat=12,
 	longitude = -7.6,
 	latitude = 5.875,
 	yield = 3969,
@@ -66,11 +71,14 @@ x <- data.frame(
 	harvest_date = "2035-01-01",
 	N_fertilizer = 100,
 	P_fertilizer = 25,
-	K_fertilizer = -10,
+	K_fertilize = -10,
 	irrigated = FALSE,
-	test = NA
+	test = 0
 )
-check_variables(x, trms, required=FALSE)
+
+check_variables(x, trms, required=FALSE, suggest=FALSE)
+
+check_variables(x, trms, required=FALSE, suggest=TRUE)
 
 check_variables(x, trms, required=TRUE)
 

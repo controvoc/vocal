@@ -96,6 +96,8 @@ read_one_voc <- function(voc) {
 	}
 	names(v) <- NULL
 	v <- do.call(dplyr::bind_rows, v)
+#	if (!is.null(v$required)) v$required[is.na(v$required)] <- "no"
+#	if (!is.null(v$multiple_allowed)) v$multiple_allowed[is.na(v$multiple_allowed)] <- "no"
 
 	ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
 	values <- lapply(ff, utils::read.csv)
