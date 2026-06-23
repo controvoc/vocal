@@ -17,6 +17,21 @@
 }
 
 
+.common_suffix_len <- function(a, b) {
+	a <- .var_name_key(a)
+	b <- .var_name_key(b)
+	na <- nchar(a)
+	nb <- nchar(b)
+	n <- min(na, nb)
+	if (n == 0L) return(0L)
+	for (k in seq_len(n)) {
+		if (substr(a, na - k + 1L, na - k + 1L) !=
+			substr(b, nb - k + 1L, nb - k + 1L)) return(k - 1L)
+	}
+	n
+}
+
+
 .term_matches_start_or_end <- function(unknown, known) {
 	if (!nzchar(unknown)) return(FALSE)
 	pairs <- list(
@@ -28,9 +43,17 @@
 		k <- p$k
 		nu <- nchar(u)
 		nk <- nchar(k)
-		if (nu == 0L || nu > nk) next
-		if (tolower(substr(k, 1L, nu)) == tolower(u)) return(TRUE)
-		if (tolower(substr(k, nk - nu + 1L, nk)) == tolower(u)) return(TRUE)
+		if (nu == 0L || nk == 0L) next
+		lu <- tolower(u)
+		lk <- tolower(k)
+		if (nu <= nk) {
+			if (substr(lk, 1L, nu) == lu) return(TRUE)
+			if (substr(lk, nk - nu + 1L, nk) == lu) return(TRUE)
+		}
+		if (nk <= nu) {
+			if (substr(lu, 1L, nk) == lk) return(TRUE)
+			if (substr(lu, nu - nk + 1L, nu) == lk) return(TRUE)
+		}
 	}
 	FALSE
 }
@@ -63,8 +86,11 @@ suggest_term_name <- function(name, terms, max_dist = 2, max_rel = 0.25,
 			score <- ln - min(nchar(nk), nchar(nc))
 		} else {
 			if (min(nchar(nk), nchar(nc)) / ln < min_len_ratio) next
-			pfx <- .common_prefix_len(name, cand)
-			if (pfx < min(min_prefix, min(nchar(nk), nchar(nc)))) next
+			overlap <- max(
+				.common_prefix_len(name, cand),
+				.common_suffix_len(name, cand)
+			)
+			if (overlap < min(min_prefix, min(nchar(nk), nchar(nc)))) next
 			rel <- dist / ln
 			if (dist > max_dist && rel > max_rel) next
 			score <- 1000L + dist
