@@ -3,8 +3,7 @@ Type: Package
 Title: Controlled vocabulary compliance checking
 Description: Tools to check if data is compliant with a controlled vocabulary. 
 Version: 0.3-12
-Imports: geodata, terra, httr, jsonlite, rappdirs
-Suggests: dplyr
+Imports: geodata, terra, httr, jsonlite, rappdirs, dplyr
 Depends: R (>= 4.1.0)
 Date: 2026-06-23
 Encoding: UTF-8
