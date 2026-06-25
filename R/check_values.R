@@ -133,9 +133,7 @@ check_accepted <- function(x, trms, answ) {
 		if (length(provided) > 0) {
 			if (!is.null(trms$multiple_allowed)) {
 				if (!isTRUE(trms$multiple_allowed[i] == "no")) {
-					if (!is.na(provided[1])) {
-						provided <- unique(unlist(strsplit(as.character(provided), ";|; ")))
-					}
+					provided <- trimws(unique(unlist(strsplit(as.character(provided), ";|; "))))
 				}
 			}
 			if (trms$vocabulary[i] == "crop") {
