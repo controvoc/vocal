@@ -2,10 +2,10 @@ Package: vocal
 Type: Package
 Title: Controlled vocabulary compliance checking
 Description: Tools to check if data is compliant with a controlled vocabulary. 
-Version: 0.3-12
+Version: 0.3-13
 Imports: geodata, terra, httr, jsonlite, rappdirs, dplyr
 Depends: R (>= 4.1.0)
-Date: 2026-06-23
+Date: 2026-07-08
 Encoding: UTF-8
 Authors@R: c(
 	person("Robert J.", "Hijmans", role = c("cre", "aut"),  email = "r.hijmans@gmail.com")

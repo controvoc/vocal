@@ -141,7 +141,7 @@ check_accepted <- function(x, trms, answ) {
 					provided <- unique(unlist(strsplit(as.character(provided), "_")))
 				}
 			}
-			if (isTRUE(trms$NAok[i]=="yes")) {
+			if (!isTRUE(trms$NAok[i]=="no")) {
 				provided <- stats::na.omit(provided)
 			}
 			if (length(provided) > 0) {
