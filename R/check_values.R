@@ -79,6 +79,12 @@ check_ranges <- function(x, trms, answ) {
 
 
 check_type_range <- function(x, trms, answ) {
+
+	i <- colSums(is.na(x)) < nrow(x)
+	if (!any(i)) return(answ)
+	# do not check type variables that only have NA
+	x <- x[, i] 
+	
 	nms <- colnames(x)
 	i <- match(nms, trms$name)
 	x <- x[, !is.na(i), drop=FALSE]
@@ -92,14 +98,8 @@ check_type_range <- function(x, trms, answ) {
 		nms <- colnames(x)
 		trs <- trs[!skip, , drop=FALSE]
 	}
-	cls <- vapply(x, function(v) {
-		cl <- class(v)
-		if (length(cl) > 1 && any(cl %in% c("POSIXct", "POSIXt", "Date"))) {
-			"date"
-		} else {
-			cl[[1]]
-		}
-	}, character(1))
+	cls <- sapply(x, function(v) class(v)[[1]])
+	
 	cls <- cbind(cls, trs$type, nms)
 	cls <- cls[cls[,2] != "", , drop=FALSE]
 	if (NROW(cls) == 0) return(check_ranges(x, trs, answ))
