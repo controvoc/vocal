@@ -149,18 +149,29 @@ read_vocabulary <- function() {
 
 clone_github <- function(name, path) {
 	fgz <- tempfile()
+	on.exit(unlink(fgz), add = TRUE)
 	url <- paste0("https://api.github.com/repos/", name, "/tarball/HEAD")
-	utils::download.file(url, fgz, mode="wb", quiet = TRUE)
+	dl <- try(utils::download.file(url, fgz, mode = "wb", quiet = TRUE), silent = TRUE)
+	if (inherits(dl, "try-error") || !isTRUE(dl == 0L) || !file.exists(fgz) || isTRUE(file.info(fgz)$size < 1)) {
+		return(FALSE)
+	}
 	dzip <- tempfile()
-	utils::untar(fgz, exdir=dzip)
+	on.exit(unlink(dzip, recursive = TRUE), add = TRUE)
+	unt <- try(utils::untar(fgz, exdir = dzip), silent = TRUE)
+	if (inherits(unt, "try-error")) {
+		return(FALSE)
+	}
 	ff <- list.files(dzip, recursive=TRUE, full.names=TRUE)
 	relff <- list.files(dzip, recursive=TRUE)
+	if (length(relff) < 1L) {
+		return(FALSE)
+	}
 	rem <- strsplit(relff[1], "/")[[1]][1]
 	outf <- file.path(path, name, gsub(rem, "", relff))
 	outd <- unique(dirname(outf))
 	for (d in outd) dir.create(d, FALSE, TRUE)
-	exf <- list.files(path, recursive=TRUE, full.names=TRUE)
-	file.remove(exf)	
+	exf <- list.files(file.path(path, name), recursive=TRUE, full.names=TRUE)
+	if (length(exf)) file.remove(exf)
 	all(file.copy(ff, outf))
 }
 
@@ -182,11 +193,32 @@ github_sha <- function(voc) {
 	burl <- file.path("https://api.github.com/repos", voc)
 	# use GET instead to make sure it exists
 	# and to exit if no internet
-	v <- try(readLines(file.path(burl, "commits/main")))
+	v <- try(readLines(file.path(burl, "commits/main")), silent = TRUE)
 	if (inherits(v, "try-error")) {
-		return(NA)
+		return(NA_character_)
 	}
-	jsonlite::fromJSON(v)$sha
+	sha <- try(jsonlite::fromJSON(v)$sha, silent = TRUE)
+	if (inherits(sha, "try-error") || is.null(sha) || length(sha) < 1L || is.na(sha[1])) {
+		return(NA_character_)
+	}
+	as.character(sha[1])
+}
+
+
+# Write sha.txt only when we have a real character SHA.
+.write_vocab_sha <- function(sha, path, voc_label = NULL) {
+	if (!is.character(sha) || length(sha) < 1L || is.na(sha[1]) || !nzchar(sha[1])) {
+		if (!is.null(voc_label)) {
+			warning(
+				"installed ", voc_label,
+				" but could not record GitHub SHA (API unavailable or timed out)",
+				call. = FALSE
+			)
+		}
+		return(invisible(FALSE))
+	}
+	writeLines(sha[1], path)
+	invisible(TRUE)
 }
 
 
@@ -205,14 +237,25 @@ check_installed <- function(voc, update, quiet=FALSE) {
 			p <- vocabulary_path("github:")
 			v <- gsub("^github:", "", voc[i])
 			gsha <- github_sha(v)
-			updated <- try(clone_github(v, p))
+			updated <- try(clone_github(v, p), silent = TRUE)
 			if (isTRUE(updated)) {
-				writeLines(gsha, file.path(pvoc, "sha.txt"))
+				.write_vocab_sha(gsha, file.path(pvoc, "sha.txt"), voc_label = voc[i])
 				.vocal_environment$checked <- TRUE
 				out[i] <- TRUE
+			} else {
+				if (!quiet) {
+					msg <- if (inherits(updated, "try-error")) {
+						conditionMessage(attr(updated, "condition"))
+					} else {
+						"clone failed"
+					}
+					message("install failed for ", voc[i], ": ", msg)
+					utils::flush.console()
+				}
+				out[i] <- NA
 			}
 		} else if (isTRUE(update)) {
-			check_one_vocabulary(voc[i], update=TRUE, force=FALSE, quiet=quiet, delay=24)
+			check_one_vocabulary(voc[i], update=TRUE, quiet=quiet, delay=24)
 		} else {
 			out[i] <- TRUE		
 		}
@@ -222,7 +265,7 @@ check_installed <- function(voc, update, quiet=FALSE) {
 
 
 
-check_one_vocabulary <- function(gvoc, update, force, quiet, delay=0) {
+check_one_vocabulary <- function(gvoc, update, quiet, delay=0) {
 
 		if (!grepl("^github:", gvoc)) {
 			return(FALSE)
@@ -262,9 +305,9 @@ check_one_vocabulary <- function(gvoc, update, force, quiet, delay=0) {
 			message(paste("updating", voc, "to version", gsha)); 
 			utils::flush.console()
 		}
-		updated <- try(clone_github(voc, vocabulary_path("github:")))
+		updated <- try(clone_github(voc, vocabulary_path("github:")), silent = TRUE)
 		if (isTRUE(updated)) {
-			writeLines(gsha, file.path(pth, "sha.txt"))	
+			.write_vocab_sha(gsha, file.path(pth, "sha.txt"), voc_label = gvoc)
 			result <- TRUE
 		} else {
 			if (!quiet) message("update failed"); utils::flush.console()
@@ -282,7 +325,7 @@ check_vocabulary <- function(update=TRUE, force=FALSE, delay=0, quiet=FALSE) {
 	voc <- get_vocabulary()
 	out <- rep(FALSE, length(voc))
 	for (i in 1:length(voc)) {
-		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, delay=delay, quiet=quiet)
+		out[i] <- check_one_vocabulary(voc[i], update=update, delay=delay, quiet=quiet)
 	}
 	if (any(is.na(out))) {
 		warning(paste("could not check for update:", paste(voc[is.na(out)], collapse="; ")))
