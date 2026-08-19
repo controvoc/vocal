@@ -103,7 +103,7 @@ check_type_range <- function(x, trms, answ) {
 	cls <- cbind(cls, trs$type, nms)
 	cls <- cls[cls[,2] != "", , drop=FALSE]
 	if (NROW(cls) == 0) return(check_ranges(x, trs, answ))
-	i <- (cls[,1] == "character") & (cls[,2] == "date")
+	i <- (cls[,1] == "character") & (cls[,2] %in% c("date", "time"))
 	cls[i, 2] <- "character"
 	i <- (cls[,1] == "integer") & (cls[,2] == "numeric")
 	cls[i, 1] <- "numeric"
