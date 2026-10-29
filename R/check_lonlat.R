@@ -14,24 +14,37 @@ check_lonlat <- function(x) {
 
 #	path <- system.file(package="carobiner")
 	p <- file.path(rappdirs::user_data_dir(), ".carob")
-
-#	wres <- ifelse(res=="high", 1, 5)
-	wres <- 1
-	w <- geodata::world(path=p, res=wres)
+	fbw <- file.path(p, "gadm", "gadm_buf.rds")
+	if (!file.exists(fbw)) {
+		w <- geodata::world(path=p, res=1)
+		w <- terra::buffer(w, 2500)
+		print("preparing gadm")
+		terra::saveRDS(w, fbw)
+	} else {
+		w <- terra::readRDS(fbw)
+	}
+	
 	x <- unique(stats::na.omit(x[, c("country", "longitude", "latitude")]))
 	e <- terra::extract(w, x[, c("longitude", "latitude")])
-	e$country <- x$country
-	e <- e[, c("NAME_0", "country")]
-	i <- is.na(e$NAME_0)
+	e$country <- x$country[e$id.y]
+	e$match <- e$NAME_0 == e$country
+	a <- aggregate(e["match"], e[,c("id.y", "country")], max)
+
+#	e <- e[, c("NAME_0", "country")]
+	i <- is.na(a$match)
 	if (any(i)) {
-		u <- unique(e$country[i])
+		u <- unique(a$country[i])
 		bad <- paste(u, collapse=", ")
 		answ[nrow(answ)+1, ] <- c("coordinates not on land", bad)
 	} 
-	e <- unique(stats::na.omit(e))
-	i <- e$NAME_0 != e$country
+	i <- a$match == 0
 	if (any(i)) {
-		u <- apply(e[i, ,drop=FALSE], 1, paste, collapse="/")
+		i <- which(i)
+		b <- e[e$id.y %in% a$id.y[i], c("id.y", "NAME_0", "country")] 
+		b <- reshape(transform(b, time = ave(id.y, id.y, FUN = seq_along)),
+         idvar = c("id.y", "country"), timevar = "time", direction = "wide")[,-1]
+		b <- cbind(b[,1], apply(b[,-1,drop=FALSE], 1, \(x) paste(x[!is.na(x)], collapse=" or "))) 
+		u <- apply(b, 1, paste, collapse="/")
 		bad <- paste(u, collapse=", ")
 		answ[nrow(answ)+1, ] <- c("coordinates in wrong country", bad)
 	}
