@@ -53,10 +53,36 @@ check_lonlat <- function(x) {
 	
 	locvars <- c("country", paste0("adm", 1:5), "location", "site", "longitude", "latitude")
 	i <- which(locvars %in% colnames(x))
-	locs <- unique(x[, locvars[i]])
-	xy <- unique(x[, c("longitude", "latitude")])
-	if (nrow(xy) < (0.9 * nrow(locs))) {
-		answ[nrow(answ)+1, ] <- c("duplicate coordinates", "fewer coordinates than locations")
+	has_xy <- !is.na(x$longitude) & !is.na(x$latitude)
+	xxy <- x[has_xy, , drop=FALSE]
+	if (nrow(xxy) > 0) {
+		if ("geo_from_source" %in% colnames(xxy)) {
+			xs <- xxy[!is.na(xxy$geo_from_source) & xxy$geo_from_source, , drop=FALSE]
+			if (nrow(xs) > 0) {
+				locs <- unique(xs[, locvars[i], drop=FALSE])
+				xy <- unique(xs[, c("longitude", "latitude"), drop=FALSE])
+				if (nrow(xy) < (0.9 * nrow(locs))) {
+					answ[nrow(answ)+1, ] <- c("duplicate coordinates", "fewer coordinates than locations")
+				}
+			}
+			is_surv <- "is_survey" %in% colnames(xxy) && isTRUE(all(xxy$is_survey[!is.na(xxy$is_survey)]))
+			if (!is_surv) {
+				xe <- xxy[!is.na(xxy$geo_from_source) & !xxy$geo_from_source, , drop=FALSE]
+				if (nrow(xe) > 0) {
+					locs <- unique(xe[, locvars[i], drop=FALSE])
+					xy <- unique(xe[, c("longitude", "latitude"), drop=FALSE])
+					if (nrow(xy) < (0.9 * nrow(locs))) {
+						answ[nrow(answ)+1, ] <- c("duplicate coordinates", "fewer coordinates than locations (estimated)")
+					}
+				}
+			}
+		} else {
+			locs <- unique(xxy[, locvars[i], drop=FALSE])
+			xy <- unique(xxy[, c("longitude", "latitude"), drop=FALSE])
+			if (nrow(xy) < (0.9 * nrow(locs))) {
+				answ[nrow(answ)+1, ] <- c("duplicate coordinates", "fewer coordinates than locations")
+			}
+		}
 	}
 	return(answ)		
 }

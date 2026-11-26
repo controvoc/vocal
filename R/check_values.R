@@ -166,14 +166,16 @@ check_values <- function(x, trms) {
 }
 
 
-check_caps <- function(x, vars, minchar=5, frac=0) {
+check_caps <- function(x, vars, minchar=5, frac=0, minn=1) {
 	answ <- data.frame(check="", msg="")[0,]
 	stopifnot(frac >= 0 && frac <= 1)
 	for (v in vars) {
 		m <- unique(stats::na.omit(x[[v]]))
+		if (length(m) < minn) next
 		if (minchar > 0) {
-			m <- m[nchar(m) >= 5]
+			m <- m[nchar(m) >= minchar]
 		}
+		if (length(m) == 0) next
 		i <- sum(toupper(m) == m)
 		if (i > (frac * length(m))) {
 			answ[nrow(answ)+1, ] <- c("all uppercase", v)

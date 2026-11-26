@@ -21,7 +21,7 @@ Functions for compliance checking. You can check whether variable names are acce
 check_variables(x, trms, required=TRUE, suggest=TRUE)
 check_values(x, trms)
 check_lonlat(x)
-check_caps(x, vars, minchar=5, frac=0)
+check_caps(x, vars, minchar=5, frac=0, minn=1)
 check_span(x, start, end, smin=0, smax=366)
 check_date(x, name, trms=NULL)
 check_datespan(x, startdate, enddate, smin=0, smax=366)
@@ -37,6 +37,7 @@ check_datespan(x, startdate, enddate, smin=0, smax=366)
   \item{vars}{character. The variables to check}
   \item{minchar}{positive integer}
   \item{frac}{numeric}
+  \item{minn}{positive integer. Minimum number of unique non-missing values required before checking for all-uppercase entries}
   \item{start}{numeric}
   \item{end}{numeric}
   \item{smin}{numeric}
